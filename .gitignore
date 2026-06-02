@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Data: downloaded + generated, regenerable via scripts (kept out of git)
+# NOTE: anchored to repo root so it does NOT match src/data/ (source code).
+/data/
+*.grib
+*.grib2
+
+# Claude Code harness state
+.claude/
+
+# External: IMPROVER acceptance test data (separately cloned, ~500MB, own .git)
+improver_test_data/
+
+# OS
+.DS_Store
+Thumbs.db

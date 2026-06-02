@@ -1,0 +1,31 @@
+# Northwest Russia study domain
+domain:
+  name: "nw_russia"
+  lat_min: 55.0
+  lat_max: 70.0
+  lon_min: 28.0
+  lon_max: 55.0
+  resolution_deg: 0.25
+
+# Target grid (IMPROVER output)
+target_grid:
+  projection: "PlateCarree"
+  x_resolution: 0.25
+  y_resolution: 0.25
+
+# Orography source for lapse rate corrections
+orography:
+  source: "era5"  # ERA5 surface geopotential / 9.80665
+
+# Study periods
+periods:
+  training: ["2018-01-01", "2020-12-31"]
+  validation: ["2021-01-01", "2021-12-31"]
+  test: ["2022-01-01", "2023-12-31"]
+
+# Seasons for stratified analysis
+seasons:
+  DJF: [12, 1, 2]
+  MAM: [3, 4, 5]
+  JJA: [6, 7, 8]
+  SON: [9, 10, 11]

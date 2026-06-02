@@ -1,0 +1,88 @@
+# Model data source configurations
+models:
+  gefs:
+    full_name: "NCEP Global Ensemble Forecast System v12"
+    short_name: "gefs"
+    type: "ensemble"
+    n_members: 31  # 1 control + 30 perturbed
+    resolution_deg: 0.25
+    init_times: ["00", "06", "12", "18"]
+    max_lead_hours: 384  # 16 days
+    time_step_hours: 3  # 3-hourly to 240h, 6-hourly after
+    sources:
+      zarr: "https://data.dynamical.org/noaa/gefs/forecast-35-day/latest.zarr"
+      aws_s3: "s3://noaa-gefs-pds"
+      reforecast_s3: "s3://noaa-gefs-retrospective"
+    variables:
+      t2m:
+        grib_name: "TMP"
+        grib_level: "2 m above ground"
+        cf_name: "air_temperature"
+        units: "K"
+
+  aifs_single:
+    full_name: "ECMWF AIFS Deterministic"
+    short_name: "aifs"
+    type: "deterministic"
+    n_members: 1
+    resolution_deg: 0.25
+    init_times: ["00", "06", "12", "18"]
+    max_lead_hours: 360
+    time_step_hours: 6
+    sources:
+      ecmwf_opendata:
+        model: "aifs-single"
+        type: "fc"
+    variables:
+      t2m:
+        param: "2t"
+        cf_name: "air_temperature"
+        units: "K"
+
+  aifs_ens:
+    full_name: "ECMWF AIFS Ensemble"
+    short_name: "aifs-ens"
+    type: "ensemble"
+    n_members: 51
+    resolution_deg: 0.25
+    init_times: ["00", "06", "12", "18"]
+    max_lead_hours: 360
+    time_step_hours: 6
+    sources:
+      ecmwf_opendata:
+        model: "aifs-ens"
+        type: "pf"  # perturbed forecast
+    variables:
+      t2m:
+        param: "2t"
+        cf_name: "air_temperature"
+        units: "K"
+
+  ecmwf_ens:
+    full_name: "ECMWF IFS Ensemble"
+    short_name: "ifs-ens"
+    type: "ensemble"
+    n_members: 51
+    resolution_deg: 0.25
+    init_times: ["00", "06", "12", "18"]
+    max_lead_hours: 360
+    time_step_hours: 6
+    sources:
+      ecmwf_opendata:
+        model: "ifs"
+        type: "pf"
+    variables:
+      t2m:
+        param: "2t"
+        cf_name: "air_temperature"
+        units: "K"
+
+# Ground truth
+verification:
+  era5:
+    source: "gs://weatherbench2/datasets/era5/1959-2023_01_10-wb13-6h-1440x721_with_derived_variables.zarr"
+    variable: "2m_temperature"
+    units: "K"
+  isd:
+    source: "s3://noaa-isd-pds"
+    wmo_blocks: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]  # Russian stations

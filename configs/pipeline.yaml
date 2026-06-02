@@ -1,0 +1,94 @@
+# IMPROVER processing chain configuration
+# Each step can be toggled on/off and configured independently
+
+variable: "air_temperature"
+height: 2  # metres above ground
+
+steps:
+  # Step 1: Standardise to IMPROVER-compatible format
+  standardise:
+    enabled: true
+    # Handled by src/data/iris_convert.py
+
+  # Step 2: Lapse rate correction for orographic differences
+  lapse_rate:
+    enabled: true
+    lapse_rate_value: -0.0065  # K/m (dry adiabatic approximation)
+    # Uses orography difference: model orog vs target grid orog
+
+  # Step 3: Bias correction (rolling window)
+  bias_correction:
+    enabled: true
+    training_days: 30
+    method: "additive"  # additive bias correction per grid point & lead time
+
+  # Step 4: Convert to probabilities
+  thresholding:
+    enabled: true
+    # Thresholds in Kelvin (operationally relevant for NW Russia)
+    thresholds: [243.15, 248.15, 253.15, 258.15, 263.15, 268.15, 273.15, 278.15, 283.15, 293.15]
+    # Equivalent in °C: [-30, -25, -20, -15, -10, -5, 0, 5, 10, 20]
+    comparison: "greater_than"
+    ensemble:
+      method: "ensemble"  # count fraction of members exceeding threshold
+    deterministic:
+      method: "fuzzy"
+      fuzzy_factor: 0.95  # width of fuzzy membership function
+
+  # Step 5: Neighbourhood processing
+  neighbourhood:
+    enabled: true
+    method: "square"  # square or circular kernel
+    radius_km: 20  # neighbourhood radius
+    land_sea_mask: true  # separate land/sea processing
+    weighted: true  # distance-weighted averaging
+
+  # Step 6: Time-lag blending
+  time_lag_blending:
+    enabled: true
+    n_cycles: 3  # blend current + 2 previous cycles
+    weighting: "nonlinear"
+    cval: 2.0  # decay parameter for nonlinear weights
+
+  # Step 7: EMOS calibration
+  emos:
+    enabled: true
+    distribution: "norm"  # Gaussian for temperature
+    training_days: 15
+    predictor: "mean"  # use ensemble mean as predictor
+    tolerance: 0.02
+    max_iterations: 1000
+    # For Paper 1: train on GEFS reforecast data
+    # For Paper 2: train on AIFS archive
+
+  # Step 8: Reliability calibration
+  reliability_calibration:
+    enabled: true
+    n_probability_bins: 10
+    training_days: 30
+    minimum_forecast_count: 200
+
+  # Step 9: Multi-model blending (Paper 3 only)
+  model_blending:
+    enabled: false  # activate for Paper 3
+    blend_coordinate: "model_id"
+    weighting: "dict"
+    weights:
+      # Example weights - to be optimised in Paper 3
+      gefs: 0.4
+      aifs-ens: 0.6
+    # Lead-time dependent weights (Paper 3 experiment)
+    lead_time_weights:
+      enabled: false
+      # Expect AIFS to gain weight at longer leads
+      schedule:
+        24: {gefs: 0.5, aifs-ens: 0.5}
+        72: {gefs: 0.45, aifs-ens: 0.55}
+        120: {gefs: 0.35, aifs-ens: 0.65}
+        240: {gefs: 0.3, aifs-ens: 0.7}
+
+# Output settings
+output:
+  format: "netcdf"
+  directory: "data/processed"
+  save_intermediate: true  # save output after each step for verification

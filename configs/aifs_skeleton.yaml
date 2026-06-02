@@ -1,0 +1,74 @@
+# AIFS ENS walking-skeleton config (Paper: AIFS ENS pipeline over NW Russia).
+# Phase 0 = every stage at its simplest setting. Phase 1 tunes one stage at a
+# time via alternate profiles (see `profiles:` below).
+
+domain:
+  lat_min: 58.0
+  lat_max: 68.0
+  lon_min: 28.0
+  lon_max: 44.0
+
+model: aifs-ens
+members: 51
+variable: t2m              # air_temperature, 2 m
+lead_times_hours: [24, 48, 72, 96, 120]
+
+archive:
+  start: "2025-07-01"      # AIFS ENS operational launch (data from 2025-07-02)
+  source: dynamical.org    # Icechunk Zarr: ecmwf-aifs-ens-forecast
+
+# Light held-out split so tuning is not overfit to the eval set.
+# Both windows are entirely within AIFS ENS v1 (v2 began 2026-05-12).
+tune_period: {start: "2025-07-01", end: "2026-03-31"}
+test_period: {start: "2026-04-01", end: "2026-04-30"}
+
+# Verification reference
+truth:
+  source: arco-era5        # near-real-time ERA5, covers the period
+  variable: "2m_temperature"
+
+# --- Baseline scaling (multi-date scorecard) ---
+sampling:
+  window: tune           # reuse tune_period below
+  cadence_days: 7        # weekly ~ synoptic decorrelation -> ~independent draws
+  init_hour: 0
+  data_start: "2025-07-02"   # AIFS ENS archive begins here
+bootstrap:
+  n_iterations: 1000
+  ci: 0.95
+  seed: 42               # fixed -> reproducible (reused later for paired deltas)
+seasons:
+  winter_months: [12, 1, 2]  # DJF; everything else = non-winter
+
+# Probability set
+percentiles: [10, 25, 50, 75, 90]
+# Thresholds in Kelvin (operationally relevant for NW Russia winters)
+thresholds_celsius: [-20, -10, -5, 0, 5, 10]
+
+# Profiles: a profile overrides stage settings. Phase 0 = "skeleton".
+profiles:
+  skeleton:
+    regrid_mode: bilinear       # standardise & regrid (basic)
+    neighbourhood_radius_m: 20000
+    calibration: passthrough    # no EMOS
+    blending: passthrough       # single model -> inert
+  tune-regrid:
+    regrid_mode: nearest-with-mask   # coastline lever for Gulf of Finland/Ladoga/White Sea
+    neighbourhood_radius_m: 20000
+    calibration: passthrough
+    blending: passthrough
+  tune-nbhood:
+    regrid_mode: bilinear
+    neighbourhood_radius_m: 60000    # swept in Phase 1
+    calibration: passthrough
+    blending: passthrough
+
+# Equal-area target grid (required for neighbourhood processing in metres)
+target_grid:
+  projection: laea            # Lambert Azimuthal Equal Area
+  resolution_m: 20000         # ~AIFS 0.25deg
+
+output:
+  format: netcdf
+  directory: "data/processed"
+  save_intermediate: true     # one file per stage, for per-stage verification

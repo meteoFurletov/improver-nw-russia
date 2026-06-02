@@ -1,0 +1,71 @@
+# Verification metrics and settings
+
+ground_truth:
+  primary: "era5"      # gridded verification
+  secondary: "isd"     # station-based verification
+
+# Lead times to evaluate (hours)
+lead_times: [6, 12, 24, 48, 72, 96, 120, 168, 240]
+
+metrics:
+  # Continuous metrics (ensemble mean vs truth)
+  deterministic:
+    - mae         # Mean Absolute Error
+    - rmse        # Root Mean Square Error
+    - bias        # Mean Error
+
+  # Probabilistic metrics
+  probabilistic:
+    - crps          # Continuous Ranked Probability Score
+    - crpss         # CRPS Skill Score (vs climatology)
+    - brier_score   # Brier Score at specific thresholds
+    - brier_skill   # BSS vs climatology
+    - spread_skill  # Ensemble spread vs RMSE ratio
+    - reliability   # Reliability diagram data
+    - rank_histogram  # Talagrand diagram
+
+# Thresholds for Brier Score computation (Kelvin)
+brier_thresholds:
+  freezing: 273.15        # 0°C
+  cold: 253.15            # -20°C
+  extreme_cold: 243.15    # -30°C
+
+# Stratification dimensions
+stratify_by:
+  - lead_time
+  - season          # DJF, MAM, JJA, SON
+  - land_sea        # separate land/sea scores
+  - latitude_band   # subarctic (>65°N) vs temperate (<65°N)
+
+# Comparison experiments
+experiments:
+  paper1:
+    - "raw_gefs"                    # unprocessed ensemble
+    - "gefs_bias_corrected"         # after bias correction only
+    - "gefs_neighbourhood"          # after neighbourhood processing
+    - "gefs_emos"                   # after EMOS calibration
+    - "gefs_full_pipeline"          # full IMPROVER chain
+    - "climatology"                 # ERA5 climatological probabilities
+
+  paper2:
+    - "aifs_single_raw"             # raw deterministic AIFS
+    - "aifs_single_fuzzy"           # fuzzy-thresholded AIFS
+    - "aifs_ens_raw"                # raw AIFS ensemble
+    - "aifs_ens_full_pipeline"      # AIFS ENS through IMPROVER
+    - "gefs_full_pipeline"          # from Paper 1 (baseline)
+
+  paper3:
+    - "gefs_calibrated"
+    - "aifs_calibrated"
+    - "blend_equal_weights"         # 50/50 blend
+    - "blend_optimised_weights"     # CRPS-optimised weights
+    - "blend_lead_time_weights"     # lead-time dependent weights
+    - "blend_calibrate_then_blend"  # calibrate → blend
+    - "blend_blend_then_calibrate"  # blend → calibrate
+
+# Plot settings
+plots:
+  dpi: 300
+  format: "png"
+  output_dir: "figures"
+  style: "seaborn-v0_8-paper"
