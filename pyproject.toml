@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.12"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"},
+    {name = "Nikita Furletov", email = "meteofurletov@gmail.com"},
 ]
 keywords = [
     "weather",
@@ -30,7 +30,7 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/your-username/improver-nw-russia"
+Repository = "https://github.com/meteoFurletov/improver-nw-russia"
 
 [tool.setuptools.packages.find]
 include = ["src*"]
