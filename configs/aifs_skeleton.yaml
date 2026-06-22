@@ -54,6 +54,11 @@ profiles:
     blending: passthrough       # single model -> inert
   tune-regrid:
     regrid_mode: nearest-with-mask   # coastline lever for Gulf of Finland/Ladoga/White Sea
+    # land_binary_mask cubes (built by scripts/build_landmask.py): target = the
+    # equal-area grid mask (replaces the plain target grid); source = AIFS-native.
+    landmask_target: data/processed/skeleton/masks/landmask_target_equalarea.nc
+    landmask_source: data/processed/skeleton/masks/landmask_source_aifs.nc
+    landmask_vicinity_m: 25000        # IMPROVER default coastline search radius
     neighbourhood_radius_m: 20000
     calibration: passthrough
     blending: passthrough

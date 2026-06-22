@@ -90,9 +90,18 @@ def run_skeleton_for_date(
         save_iris_netcdf(cube, str(out["01_realization"]))
 
         # --- Stage 2: standardise & regrid -> equal-area grid ---
+        # Coastline-aware modes need land_binary_mask cubes: the TARGET grid arg
+        # becomes the equal-area mask, and the source-grid mask is passed too.
         out["02_regrid"] = ld / "02_regrid.nc"
-        _improver("regrid", "--regrid-mode", prof["regrid_mode"],
-                  out["01_realization"], grid_path, "--output", out["02_regrid"])
+        mode = prof["regrid_mode"]
+        if "with-mask" in mode:
+            _improver("regrid", "--regrid-mode", mode,
+                      "--land-sea-mask-vicinity", str(prof.get("landmask_vicinity_m", 25000)),
+                      out["01_realization"], prof["landmask_target"], prof["landmask_source"],
+                      "--output", out["02_regrid"])
+        else:
+            _improver("regrid", "--regrid-mode", mode,
+                      out["01_realization"], grid_path, "--output", out["02_regrid"])
 
         # --- Stage 3: probabilities ---
         out["03_percentiles"] = ld / "03_percentiles.nc"
